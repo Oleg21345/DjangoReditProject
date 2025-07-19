@@ -23,26 +23,6 @@ def user_login(request):
     return render(request, "cooking/login_form.html", context)
 
 
-# def reset_password(request):
-#     if request.method == "POST":
-#         form = EmailChangePassword(data=request.POST)
-#         if form.is_valid():
-#             email_in_form = form.cleaned_data["email"]
-#             email_user = User.objects.filter(email=email_in_form)
-#             if email_user:
-#                 messages.info(request, message="На вашу пошту надійшов код, впишіть його в форму")
-#                 return redirect("code")
-#             else:
-#                 messages.error(request, "Помилка, акаунт з такими даними не був знайдений")
-#         else:
-#             form = EmailChangePassword()
-#
-#         context = {
-#             "title": "Зміна паролю",
-#             "form": form
-#         }
-#         return render(request, "cooking/reset_password.html", context)
-
 def user_logout(request):
     logout(request)
     messages.success(request, message="Ви успішно вийшли з акаунту")

@@ -430,8 +430,8 @@ def reply_to_comment(request, post_id):
 
 @login_required_message
 def notificated_view(request):
-    notifications = request.user.user_notif.order_by('-create_at')  # всі сповіщення
-    unread_count = request.user.user_notif.filter(is_read=False).count()  # кількість непрочитаних
+    notifications = request.user.user_notif.order_by('-create_at')
+    unread_count = request.user.user_notif.filter(is_read=False).count()
 
     context = {
         'notifications': notifications,
