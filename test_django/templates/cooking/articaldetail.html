@@ -1,0 +1,297 @@
+{% extends "cooking/base.html" %}
+{% load blog_tags %}
+{% load comment_filters %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+{% block main %}
+<main>
+    <div class="d-flex justify-content-between">
+        <div class="col-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between"> {{ post.category_id }}
+                    <div>
+                        {% if request.user == post.author %}
+                        <a href="{% url 'post_delete' post.pk %}" class="btn btn-dark">Удалить</a>
+                        <a href="{% url 'post_update' post.pk %}" class="btn btn-dark">Изменить</a>
+                        {% endif %}
+                        <a href="{% url 'category_post' post.category_id.pk %}" class="btn btn-dark">Назад</a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    {% if post.image %}
+                    <img src="{{ post.image.url }}" width="300" alt="">
+                    {% else %}
+                    <img src="https://www.raumplus.ru/upload/iblock/99e/Skoro-zdes-budet-foto.jpg" width="300" alt="">
+                    {% endif %}
+
+                    <h5 class="card-title"> {{ post.title }} </h5>
+                    <p class="card-text">{{ post.content | linebreaks }}</p>
+                </div>
+
+                <div class="card-footer d-flex justify-content-between">
+                    <p class="card-text">{{ post.create_at }}</p>
+                    <a href="{% url 'profile' post.author.pk %}">{{ post.author }}</a>
+                    <p class="card-text"> {{ post.watched }} </p>
+                    <div class="d-flex gap-2 align-items-center mt-3 ms-2">
+                        <form method="post" action="{% url 'vote_post' post.pk 1 %}">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-success" type="submit">👍 {{ post.like_count }}</button>
+                        </form>
+                        <form method="post" action="{% url 'vote_post' post.pk -1 %}">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-danger" type="submit">👎 {{ post.dislike_count }}</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <h2>Коментарі</h2>
+
+            {% if request.user.is_authenticated %}
+            <form method="post" action="">
+                {% csrf_token %}
+                {{ comment_form.text }}
+
+                {% if edit_comment_id %}
+                <input type="hidden" name="comment_id" value="{{ edit_comment_id }}">
+                {% endif %}
+
+                {% if reply_to_comment_id %}
+                <input type="hidden" name="reply_to_comment" value="{{ reply_to_comment_id }}">
+                {% endif %}
+
+                <button type="submit" class="btn btn-dark mt-2">
+                    Додати коментар
+                </button>
+                {% if reply_to_comment_id %}
+                <a href="{% url 'post_detail' post.id %}" class="btn btn-secondary mt-2 ms-2">Скасувати</a>
+                {% endif %}
+            </form>
+            {% endif %}
+
+            {% for comment in comments %}
+            {% if not comment.reply_to_comment %}
+            {% include "cooking/component/_comments.html" with comment=comment comments=comments level=0 %}
+            {% endif %}
+            {% endfor %}
+
+            {% if comments|length == 0 %}
+            <div class="card mt-3 p-3">
+                <p class="text-muted">Поки що коментарів немає. Будь першим!</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-1"></div>
+        <div class="col-4">
+            {% for ext in ext_post %}
+            <div class="card" style="width: 18rem;">
+                {% if ext.image %}
+                <img src="{{ ext.image.url }}" width="300" alt="">
+                {% else %}
+                <img src="https://www.raumplus.ru/upload/iblock/99e/Skoro-zdes-budet-foto.jpg" width="300" alt="">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ ext.title }}</h5>
+                    <a href="{{ ext.get_absolute_url }}" class="btn btn-primary">Подробнее</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          const replyForms = document.querySelectorAll(".reply-form");
+
+          replyForms.forEach(form => {
+            form.addEventListener("submit", async (e) => {
+              e.preventDefault();
+
+              const formData = new FormData(form);
+              const url = form.getAttribute("action");
+
+              try {
+                const response = await fetch(url, {
+                  method: "POST",
+                  headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": form.querySelector('[name="csrfmiddlewaretoken"]').value
+                  },
+                  body: formData
+                });
+
+                if (!response.ok) {
+                  alert("Сталася помилка при відправці.");
+                  return;
+                }
+
+                const data = await response.json();
+
+                const commentHtml = `
+                <div class="card mt-2 ms-5" id="comment-${data.id}" data-comment-id="${data.id}">
+                  <div class="card-header d-flex align-items-center gap-2">
+                    <img src="${data.user_avatar}" alt="Avatar" class="rounded-circle" width="40" height="40">
+                    <span>${data.user}</span>
+                    <small class="text-muted ms-auto">(${data.created})</small>
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text"><strong>→ Відповідь на коментар #${data.reply_to_comment_id}</strong>: ${data.text}</p>
+                    <div class="d-flex gap-2 mt-2">
+                      <button class="btn btn-sm btn-outline-success like-btn">👍</button>
+                      <button class="btn btn-sm btn-outline-danger dislike-btn">👎</button>
+                      <button class="btn btn-sm btn-outline-secondary delete-btn">🗑Видалити</button>
+                      <button class="btn btn-sm btn-outline-warning edit-btn">🔄Змінити</button>
+                      <button type="button" class="btn btn-sm btn-primary reply-btn" data-comment-id="${data.id}">Відповісти</button>
+                    </div>
+                    <form method="post" action="${url}" class="reply-form mt-2 d-none" data-comment-id="${data.id}">
+                      <input type="hidden" name="reply_to_comment" value="${data.id}">
+                      <textarea name="text" class="form-control form-control-sm" rows="2" placeholder="Ваша відповідь..."></textarea>
+                      <input type="hidden" name="csrfmiddlewaretoken" value="${form.querySelector('[name="csrfmiddlewaretoken"]').value}">
+                      <button type="submit" class="btn btn-sm btn-primary mt-1">Відправити</button>
+                      <button type="button" class="btn btn-sm btn-link cancel-reply-btn" data-comment-id="${data.id}">Скасувати</button>
+                    </form>
+                  </div>
+                </div>`;
+
+                const parentComment = document.querySelector(`.card[data-comment-id='${data.reply_to_comment_id}'] .card-body`);
+                if (parentComment) {
+                  parentComment.insertAdjacentHTML('beforeend', commentHtml);
+                } else {
+                  document.querySelector(".col-8").insertAdjacentHTML('beforeend', commentHtml);
+                }
+
+                form.style.display = "none";
+                form.querySelector("textarea").value = "";
+
+                const newComment = document.getElementById(`comment-${data.id}`);
+                attachActionButtonsEvents(newComment);
+                setupReplyToggles();
+
+              } catch (error) {
+                alert("Сталася помилка при відправці.");
+                console.error(error);
+              }
+            });
+          });
+
+          setupReplyToggles();
+          document.querySelectorAll(".card[data-comment-id]").forEach(attachActionButtonsEvents);
+        });
+
+        // кнопки відповіді / скасування
+        function setupReplyToggles() {
+          document.querySelectorAll(".reply-btn").forEach(button => {
+            button.addEventListener("click", () => {
+              const commentId = button.getAttribute("data-comment-id");
+              const form = document.querySelector(`form.reply-form[data-comment-id="${commentId}"]`);
+              if (form) {
+                form.classList.remove('d-none');
+                form.querySelector("textarea").focus();
+              }
+            });
+          });
+
+          document.querySelectorAll(".cancel-reply-btn").forEach(button => {
+            button.addEventListener("click", () => {
+              const commentId = button.getAttribute("data-comment-id");
+              const form = document.querySelector(`form.reply-form[data-comment-id="${commentId}"]`);
+              if (form) {
+                form.classList.add('d-none');
+                form.querySelector("textarea").value = "";
+              }
+            });
+          });
+        }
+
+        // функція додавання кнопок дій
+        function attachActionButtonsEvents(commentCard) {
+          const commentId = commentCard.dataset.commentId;
+
+          commentCard.querySelector(".like-btn")?.addEventListener("click", () => {
+            fetch(`/comments/${commentId}/like/`, {
+              method: "POST",
+              headers: {
+                "X-CSRFToken": getCSRFToken(),
+              },
+            }).then((res) => {
+              if (res.ok) console.log(`Liked comment ${commentId}`);
+            });
+          });
+
+          commentCard.querySelector(".dislike-btn")?.addEventListener("click", () => {
+            fetch(`/comments/${commentId}/dislike/`, {
+              method: "POST",
+              headers: {
+                "X-CSRFToken": getCSRFToken(),
+              },
+            }).then((res) => {
+              if (res.ok) console.log(`Disliked comment ${commentId}`);
+            });
+          });
+
+          commentCard.querySelector(".delete-btn")?.addEventListener("click", () => {
+            if (!confirm("Ти впевнений, що хочеш видалити цей коментар?")) return;
+            fetch(`/comments/${commentId}/delete/`, {
+              method: "POST",
+              headers: {
+                "X-CSRFToken": getCSRFToken(),
+              },
+            }).then((res) => {
+              if (res.ok) {
+                commentCard.remove();
+                console.log(`Deleted comment ${commentId}`);
+              }
+            });
+          });
+
+          commentCard.querySelector(".edit-btn")?.addEventListener("click", () => {
+            const textElement = commentCard.querySelector(".card-text");
+            const currentText = textElement.textContent;
+
+            const textarea = document.createElement("textarea");
+            textarea.className = "form-control";
+            textarea.value = currentText;
+            textElement.replaceWith(textarea);
+
+            const saveButton = document.createElement("button");
+            saveButton.className = "btn btn-sm btn-success mt-2";
+            saveButton.textContent = "Зберегти";
+            textarea.insertAdjacentElement("afterend", saveButton);
+
+            saveButton.addEventListener("click", () => {
+              fetch(`/comments/${commentId}/edit/`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": getCSRFToken(),
+                },
+                body: JSON.stringify({ text: textarea.value }),
+              }).then((res) => {
+                if (res.ok) {
+                  const newText = document.createElement("p");
+                  newText.className = "card-text";
+                  newText.textContent = textarea.value;
+                  textarea.replaceWith(newText);
+                  saveButton.remove();
+                  console.log(`Edited comment ${commentId}`);
+                }
+              });
+            });
+          });
+        }
+
+        function getCSRFToken() {
+          return document.querySelector('[name="csrfmiddlewaretoken"]').value;
+        }
+    </script>
+
+
+</main>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "cooking/base.html" %}
+{% load blog_tags %}
+
+{% block title %}
+Видалення: {{ post.title }}
+{% endblock %}
+
+{% block main %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger shadow-lg">
+                <div class="card-header bg-danger text-white text-center">
+                    <h4>⚠️ Підтвердження видалення</h4>
+                </div>
+                <div class="card-body text-center">
+                    <p class="fs-5">Ви дійсно хочете <strong>безповоротно</strong> видалити коментар?:</p>
+                    <h5 class="text-danger mb-4">"{{ post.title }}"</h5>
+
+                    <form action="" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="submit" value="✅ Так, видалити" class="btn btn-danger me-2">
+                    </form>
+                    <a href="{{ post.get_absolute_url }}" class="btn btn-secondary">🔙 Назад</a>
+                </div>
+                <div class="card-footer text-muted text-end">
+                    Цю дію не можна скасувати
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

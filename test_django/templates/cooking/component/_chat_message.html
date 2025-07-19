@@ -1,0 +1,29 @@
+<div id="chat_message" hx-swap-oob="beforeend">
+
+    {% if message.author == user %}
+    <li class="d-flex justify-content-end mb-2">
+        <div class="bg-white text-dark border border-success-subtle rounded-3 px-3 py-2 shadow-sm"
+             style="max-width: 75%;">
+            {% include 'cooking/component/_file_or_text.html' %}
+        </div>
+    </li>
+    {% else %}
+    <li class="d-flex justify-content-start mb-2">
+        <a href="{% url 'profile' user.id %}">
+            <img src="{{ other_user.profile.avatars.url }}"
+                 class="rounded-circle object-fit-cover me-2"
+                 style="width: 32px; height: 32px;" alt="Avatar">
+        </a>
+        <div>
+            <div class="bg-light text-dark rounded-3 px-3 py-2 shadow-sm" style="max-width: 75%;">
+                {% include 'cooking/component/_file_or_text.html' %}
+
+            </div>
+            <div class="small text-muted pt-1 ps-1">
+                {{ message.author.profile.name }} @{{ message.author.username }}
+            </div>
+        </div>
+    </li>
+    {% endif %}
+
+</div>

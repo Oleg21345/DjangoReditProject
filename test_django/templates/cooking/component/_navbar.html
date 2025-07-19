@@ -1,0 +1,82 @@
+{% load static %}
+
+<header>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <img src="{% static 'img/15dMKdVX.png' %}" alt="#" width="40" height="40"
+                     class="d-inline-block align-text-top">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                    {% if not request.user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{% url 'login_user' %}">Увійти</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page"
+                           href="{% url 'register_user' %}">Зареєструватися</a>
+                    </li>
+
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Привіт {{ request.user.username }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{% url 'profile' request.user.pk %}">Моя
+                            сторінка</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{% url 'author_posts' request.user.id %}">Мої
+                            статті</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{% url 'home' %}">Статті</a>
+                    </li>
+
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'add' %}">Додати статтю</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'add_category' %}">Додати категорію</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'your_chats' %}">Ваші чати</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout_user' %}">Вихід</a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+
+                    {% endif %}
+
+                </ul>
+                <form class="d-flex" role="search" action="{% url 'search' %}">
+                    <input name="q" class="form-control me-2" type="search" placeholder="Пошук" aria-label="Search"/>
+                    <button class="btn btn-outline-success" type="submit">Пошук</button>
+                </form>
+
+             <a href="{% url 'notificated' %}" style="position: relative;">
+  🔔
+  {% if unread_count > 0 %}
+    <span style="position: absolute; top: -5px; right: -10px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px;">
+      {{ unread_count }}
+    </span>
+  {% endif %}
+</a>
+
+
+            </div>
+        </div>
+    </nav>
+</header>

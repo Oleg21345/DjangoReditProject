@@ -1,0 +1,31 @@
+{% if message.body %}
+    <span>{{ message.body }}</span>
+{% elif message.file %}
+    {% if message.is_image %}
+        <div style="position: relative; display: inline-block;">
+            <img src="{{ message.file.url }}" alt="{{ message.filename }}" style="max-width: 300px; max-height: 300px;" />
+            {% include "cooking/component/_download.html" %}
+        </div>
+    {% elif message.is_pdf %}
+        <div style="position: relative; display: inline-block;">
+            <embed src="{{ message.file.url }}" type="application/pdf" width="300" height="400" />
+            {% include "cooking/component/_download.html" %}
+        </div>
+    {% elif message.is_text %}
+        <div style="position: relative; display: inline-block;">
+            <iframe src="{{ message.file.url }}" width="300" height="200"></iframe>
+            {% include "cooking/component/_download.html" %}
+        </div>
+    {% elif message.is_mp4 or message.is_webm or message.is_mpg %}
+        <div style="position: relative; display: inline-block;">
+            <video controls width="300">
+                <source src="{{ message.file.url }}" type="{{ message.mime_type }}">
+                Ваш браузер не підтримує відео.
+            </video>
+                {% include "cooking/component/_download.html" %}
+        </div>
+    {% else %}
+        📎 <a href="{{ message.file.url }}" target="_blank" download>{{ message.filename }}</a>
+    {% endif %}
+{% endif %}
+

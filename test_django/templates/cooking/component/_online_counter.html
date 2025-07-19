@@ -1,0 +1,29 @@
+
+<div class="d-flex align-items-center" id="online_status_block"
+     style="
+       position: fixed;
+       bottom: 0;
+       left: 0;
+       width: 100%;
+       padding: 8px 16px;
+       background: transparent;
+       box-shadow: none;
+       z-index: 10000;
+     ">
+    {% if online_count %}
+        <div id="online_icon"
+             style="width: 14px; height: 14px; border-radius: 50%; background-color: #22c55e;"
+             class="me-2">
+        </div>
+    {% else %}
+        <div id="online_icon"
+             style="width: 14px; height: 14px; border-radius: 50%; background-color: #6b7280;"
+             class="me-2">
+        </div>
+    {% endif %}
+    <span id="online-count" class="fw-semibold" style="font-size: 1.1rem;">
+    </span>
+    <span class="ms-1" style="font-size: 1.1rem;"></span>
+</div>
+
+

@@ -1,0 +1,45 @@
+{% extends "cooking/base.html" %}
+{% block title %}Мої чати{% endblock %}
+
+{% block main %}
+<h2 class="mb-4">Мої чати</h2>
+
+{% if chats %}
+    {% for chat in chats %}
+        {% for participant in chat.members.all %}
+            {% if participant != user %}
+                <div class="card p-3 mb-3 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if participant.profile.avatars %}
+                                <img src="{{ participant.profile.avatars.url }}"
+                                     alt="Avatar"
+                                     class="rounded-circle"
+                                     style="width: 42px; height: 42px; object-fit: cover;">
+                            {% else %}
+                                <img src="https://www.pngall.com/wp-content/uploads/12/Avatar-Profile-PNG-Photos.png"
+                                     alt="Default avatar"
+                                     class="rounded-circle"
+                                     style="width: 42px; height: 42px; object-fit: cover;">
+                            {% endif %}
+
+                            <div>
+                                <div class="fw-semibold text-dark">{{ participant.profile.name }}</div>
+                                <div class="text-muted small">@{{ participant.username }}</div>
+                            </div>
+                        </div>
+
+                        <a href="{% url 'start_chat' participant.username %}" class="btn btn-primary">
+                            Перейти до чату <i class="fa-solid fa-comments ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info">У вас ще немає жодного чату.</div>
+{% endif %}
+{% endblock %}
+
+

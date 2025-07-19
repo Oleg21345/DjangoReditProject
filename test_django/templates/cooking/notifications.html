@@ -1,0 +1,48 @@
+{% extends "cooking/base.html" %}
+{% load blog_tags %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+
+{% block main %}
+<h1 class="mb-4">Сповіщення</h1>
+
+<div class="d-flex justify-content-end mb-3">
+  <a href="{% url 'mark_notificated_as_read' %}" class="btn btn-outline-secondary">
+    Відмітити всі як прочитані <i class="fa-solid fa-check-double ms-1"></i>
+  </a>
+</div>
+
+{% if notifications %}
+  {% for notif in notifications %}
+    <div class="card mb-3 p-3 {% if not notif.is_read %}border-primary{% endif %}">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          {% if notif.from_user %}
+            <a href="{% url 'profile' notif.from_user.pk %}" class="{% if not notif.is_read %}fw-bold{% endif %} me-2">
+              {{ notif.from_user.username }}
+            </a>
+          {% else %}
+            <span class="{% if not notif.is_read %}fw-bold{% endif %} me-2">Система</span>
+          {% endif %}
+          <span class="{% if not notif.is_read %}fw-bold{% endif %}">
+            {{ notif.notificated }}
+          </span>
+        </div>
+        <div class="text-muted small">
+          {{ notif.create_at|date:"d M Y H:i" }}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="alert alert-info">
+    Немає сповіщень
+  </div>
+{% endif %}
+
+
+
+{% endblock %}

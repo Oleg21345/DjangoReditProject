@@ -1,0 +1,208 @@
+{% extends "cooking/base.html" %}
+{% load blog_tags %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+{% block main %}
+
+<div class="mx-auto my-5" style="max-width: 65vw;">
+    <div id="chat_window" class="d-flex flex-column bg-white border rounded-4 shadow position-relative"
+         style="height: 820px;">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center border-bottom px-3 py-2 bg-white sticky-top"
+             style="z-index: 10;">
+            {% if other_user %}
+            <a href="{% url 'profile' other_user.id %}" class="text-decoration-none d-flex align-items-center gap-2"
+               style="position: relative;">
+
+                {% if other_user.profile.avatars %}
+                <img src="{{ other_user.profile.avatars.url }}" alt="Avatar" class="rounded-circle"
+                     style="width: 32px; height: 32px; object-fit: cover; display: block;">
+
+                {% else %}
+                <img src="https://www.pngall.com/wp-content/uploads/12/Avatar-Profile-PNG-Photos.png"
+                     alt="Default avatar" class="rounded-circle"
+                     style="width: 32px; height: 32px; object-fit: cover; display: block;">
+                {% endif %}
+                <div>
+
+                    <div class="fw-semibold text-dark" style="font-size: 14px;">{{ other_user.profile.name }}</div>
+                    <div class="text-muted" style="font-size: 12px;">@{{ other_user.username }}</div>
+                </div>
+            </a>
+            {% endif %}
+
+        </div>
+
+        <!-- Messages -->
+        <div id="chat_container" class="flex-grow-1 overflow-auto px-3 py-2" style="background-color: #f9f9f9;">
+            <ul id="chat_messages" class="list-unstyled d-flex flex-column justify-content-end gap-2">
+                {% for message in chat_messages reversed %}
+                {% include 'cooking/component/_chat_message.html' %}
+                {% endfor %}
+                <div id="scroll_anchor"></div>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-top px-3 py-3 bg-white sticky-bottom" style="z-index: 10;">
+            <form id="chat_message_form"
+                  class="d-flex gap-2 w-100 align-items-center">
+                {% csrf_token %}
+                <input type="text" name="body" class="form-control flex-grow-1" placeholder="Напишіть повідомлення..."
+                       autocomplete="off"/>
+                <button type="submit" class="btn btn-success">Надіслати</button>
+            </form>
+            <form id="chat_file_form" enctype="multipart/form-data"
+                  class="d-flex gap-2 w-100 align-items-center mt-2"
+                    hx-post="{% url 'chat_file_upload' chatroom_name %} "
+                    hx-target="#chat_messages"
+                    hx-swap="beforeend"
+                    _="on htmx:beforeSend reset() me">
+                {% csrf_token %}
+
+                <input type="file" name="file" id="id_file"
+                       class="form-control form-control-sm"
+                       style="max-width: 300px;"/>
+
+                <button type="submit" class="btn btn-outline-primary btn-sm">
+                    📎 Надіслати файл
+                </button>
+            </form>
+
+        </div>
+
+
+    </div>
+</div>
+
+{% block extra_style %}
+<style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+
+<script>
+    const chatSocket = new WebSocket(`ws://${window.location.host}/ws/chatroom/{{ chatroom_name }}`);
+
+    chatSocket.onmessage = function(e) {
+      let data = e.data;
+
+      try {
+        let parsed = JSON.parse(data);
+        // Це JSON — перевіряємо тип
+        if (parsed.type === 'online_status') {
+          updateOnlineIcon(parsed.online_user_ids);
+          return;
+        }
+      } catch {
+        // Це не JSON — вважаємо, що це HTML повідомлення
+      }
+
+      // Додаємо повідомлення у список
+      const chatMessages = document.getElementById('chat_messages');
+      const li = document.createElement('li');
+      li.innerHTML = data;
+      chatMessages.appendChild(li);
+      li.scrollIntoView({ behavior: "smooth", block: "end" });
+    };
+
+    // Функція оновлення кольору кружечка
+    function updateOnlineIcon(onlineUserIds) {
+      const otherUserId = {{ other_user.id|default:'null' }};
+      const onlineIcon = document.getElementById('online_icon');
+
+      if (!otherUserId || !onlineIcon) return;
+
+      if (onlineUserIds.includes(otherUserId)) {
+        // Якщо інший користувач онлайн — зелений
+        onlineIcon.classList.add('online');
+        onlineIcon.classList.remove('offline');
+      } else {
+        // Якщо ні — сірий
+        onlineIcon.classList.add('offline');
+        onlineIcon.classList.remove('online');
+      }
+    }
+
+    chatSocket.onclose = function(e) {
+      console.error('Chat socket closed unexpectedly');
+    };
+
+    const form = document.getElementById('chat_message_form');
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const input = form.querySelector('input[name="body"]');
+      const message = input.value.trim();
+      if (message === '') return;
+
+      chatSocket.send(JSON.stringify({
+        'body': message
+      }));
+
+      input.value = '';
+    });
+
+    function updateOnlineIcon(onlineUserIds) {
+  const otherUserId = {{ other_user.id|default:"null" }};
+  const onlineIcon = document.getElementById('online_icon');
+
+  if (!otherUserId || !onlineIcon) return;
+
+  if (onlineUserIds.includes(otherUserId)) {
+    // Зелений — онлайн
+    onlineIcon.style.backgroundColor = '#22c55e';
+  } else {
+    // Сірий — офлайн
+    onlineIcon.style.backgroundColor = '#9ca3af';
+  }
+}
+chatSocket.onmessage = function(e) {
+    let data = e.data;
+
+    try {
+        let parsed = JSON.parse(data);
+
+        // онлайн статус
+        if (parsed.type === 'online_icon') {
+            const wrapper = document.getElementById('online_icon_wrapper');
+            if (wrapper) wrapper.innerHTML = parsed.html;
+            return;
+        }
+
+        if (parsed.type === 'online_status') {
+            updateOnlineIcon(parsed.online_user_ids);
+            return;
+        }
+
+    } catch {
+        // Це повідомлення
+    }
+
+    const chatMessages = document.getElementById('chat_messages');
+    const li = document.createElement('li');
+    li.innerHTML = data;
+    chatMessages.appendChild(li);
+    li.scrollIntoView({ behavior: "smooth", block: "end" });
+};
+document.body.addEventListener('htmx:afterSwap', (event) => {
+  if (event.target.id === 'chat_messages' || event.target.closest('#chat_messages')) {
+    setTimeout(() => {
+      const chatMessages = document.getElementById('chat_messages');
+      chatMessages.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 100); // затримка 100 мс — можеш підлаштувати
+  }
+});
+
+
+</script>
+
+
+{% endblock %}

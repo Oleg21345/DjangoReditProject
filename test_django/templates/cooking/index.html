@@ -1,0 +1,57 @@
+{% extends "cooking/base.html" %}
+{% load blog_tags %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+{% block body %}
+
+
+<main>
+
+    <div class="container">
+        <h2>Кулінарний портал</h2>
+        <div class="row">
+            <div class="col-3">
+                <div class="list-group">
+                    {% get_all_category as categories %}
+                    {% for category in categories %}
+                    {% if category.posts_count > 0 %}
+                    <a href="{{ category.get_absolute_url }}" class="list-group-item list-group-item-action">
+                        {{ category.title }}
+                    </a>
+
+                    {% endif %}
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            <div class="col-8">
+                {% for post in posts %}
+
+                <div class="card text-center">
+                    <div class="card-header">
+                        {{ post.category_id }}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title"> {{ post.title }} </h5>
+                        <p class="card-text"> {{ post.content | truncatewords:20 }} </p>
+                        <a href="{{ post.get_absolute_url }}" class="btn btn-primary"> Подробиці </a>
+                    </div>
+                    <div class="card-footer text-body-secondary">
+                        {{ post.create_at }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</main>
+
+
+{% endblock %}
+
+

@@ -1,0 +1,86 @@
+{# _comments.html #}
+
+{% load custom_filters %}
+
+<div class="card mt-3 {% if level > 0 %}comment-reply{% endif %}" style="margin-left: {{ level|default:0|add:"
+     0"|mul:20 }}px;" data-comment-id="{{ comment.id }}">
+<div class="card-header d-flex align-items-center gap-2">
+    {% if comment.user.profile.avatars %}
+    <a href="{% url 'profile' comment.user.id %}">
+        <img src="{{ comment.user.profile.avatars.url }}" alt="Avatar" class="rounded-circle" width="40" height="40">
+    </a>
+    {% else %}
+    <img src="https://www.pngall.com/wp-content/uploads/12/Avatar-Profile-PNG-Photos.png" alt="Default avatar"
+         class="rounded-circle" width="40" height="40">
+    {% endif %}
+    <span>{{ comment.user.username }}</span>
+    <small class="text-muted ms-auto">({{ comment.create_at|date:"d.m.Y H:i" }})</small>
+</div>
+
+<div class="card-body">
+    {% if request.user.id == comment.user.id and edit_comment_id == comment.pk %}
+    <form method="post" action="">
+        {% csrf_token %}
+        <textarea name="text" class="form-control" rows="3">{{ comment.text }}</textarea>
+        <input type="hidden" name="comment_id" value="{{ comment.pk }}">
+        <button type="submit" class="btn btn-primary mt-2">Зберегти</button>
+        <a href="{% url 'post_detail' post.pk %}" class="btn btn-secondary mt-2 ms-2">Відмінити</a>
+    </form>
+    {% else %}
+    <p class="card-text">
+        {% if comment.reply_to_comment %}
+        <strong>Відповідь на @{{ comment.reply_to_comment.user.username }}:</strong><br>
+        {% endif %}
+        {{ comment.text }}
+    </p>
+    {% endif %}
+
+    <div class="d-flex gap-2 align-items-center mt-2">
+        <form method="post" action="{% url 'vote_comment' comment.pk 1 %}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-success" type="submit">👍 {{ comment.like_count }}</button>
+        </form>
+        <form method="post" action="{% url 'vote_comment' comment.pk -1 %}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger" type="submit">👎 {{ comment.dislike_count }}</button>
+        </form>
+
+        {% if request.user == post.author or request.user.id == comment.user.id %}
+        <a href="{% url 'comment_delete' comment.pk %}" class="btn btn-sm btn-outline-secondary ms-2">🗑️ Видалити</a>
+        {% endif %}
+
+        {% if request.user.id == comment.user.id and not edit_comment_id %}
+        <a href="?edit={{ comment.pk }}" class="btn btn-sm btn-outline-secondary ms-2">🔄 Змінити</a>
+        {% endif %}
+
+        {% if level < 5 %}
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-2 reply-btn"
+                data-comment-id="{{ comment.id }}">
+            Відповісти
+        </button>
+        {% endif %}
+
+        <form method="post" action="{% url 'reply_to_comment' post.id %}" class="reply-form mt-2 d-none"
+              data-comment-id="{{ comment.id }}">
+            {% csrf_token %}
+            <textarea name="text" class="form-control form-control-sm" rows="2"
+                      placeholder="Ваша відповідь..."></textarea>
+            <input type="hidden" name="reply_to_comment" value="{{ comment.id }}">
+            <button type="submit" class="btn btn-sm btn-primary mt-1">Відправити</button>
+            <button type="button" class="btn btn-sm btn-link cancel-reply-btn" data-comment-id="{{ comment.id }}">
+                Скасувати
+            </button>
+        </form>
+    </div>
+
+    {# Рекурсивно виводимо відповіді (до 12 рівнів) #}
+    {% if level|default:0 < 5 %}
+    {% for child in comments %}
+    {% if child.reply_to_comment and child.reply_to_comment.id == comment.id %}
+    {% include "cooking/component/_comments.html" with comment=child comments=comments level=level|add:"1" %}
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+</div>
+</div>
+

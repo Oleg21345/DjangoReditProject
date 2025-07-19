@@ -1,0 +1,32 @@
+{% extends "cooking/base.html" %}
+{% load blog_tags %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+
+{% block main %}
+
+
+    <div class="d-flex justify-content-center">
+        <div class="card col-8 mb-4 mt-4">
+            <div class="card-body">
+                <h2 class="text-center">Реєстрація акаунту</h2>
+                <form action="" method="post" enctype="multipart/form-data">
+                    <!--  Fields for filling-->
+                    {% csrf_token %}
+                    {% include "cooking/component/_form_errors.html" %}
+                    {{ form.as_p }}
+                    <button class="btn btn-dark" type="submit">Зараєструватися</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div style="margin-top: 100px;"></div>
+    </div>
+
+
+{% endblock %}
+

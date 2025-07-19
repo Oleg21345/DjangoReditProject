@@ -1,0 +1,48 @@
+{% extends "cooking/base.html" %}
+{% load blog_tags %}
+
+{% block title %}
+Статті автора {{ author.username }}
+{% endblock %}
+
+{% block body %}
+<main>
+    <div class="container">
+        <h2>Статті автора {{ author.username }}</h2>
+        <div class="row">
+
+            <div class="col-3">
+                <div class="list-group">
+                    {% for category in categories %}
+                        <a href="{% url 'category_post_author' user_id=author.id category_id=category.id %}"
+                           class="list-group-item list-group-item-action">
+                            {{ category.title }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-8">
+                {% for post in posts %}
+                    <div class="card text-center mb-3">
+                        <div class="card-header">
+                            {{ post.category_id.title }}
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ post.title }}</h5>
+                            <p class="card-text">{{ post.content|truncatewords:20 }}</p>
+                            <a href="{{ post.get_absolute_url }}" class="btn btn-primary">Подробиці</a>
+                        </div>
+                        <div class="card-footer text-body-secondary">
+                            {{ post.create_at }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">Цей автор ще не написав жодної статті.</p>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+</main>
+{% endblock %}
