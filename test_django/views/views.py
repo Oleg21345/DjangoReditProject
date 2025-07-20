@@ -1,6 +1,6 @@
 from django.db.models import F, Q, Count
 from django.contrib import messages
-from django.views.generic import ListView, DetailView, CreateView, DeleteView, UpdateView
+from django.views.generic import ListView,  CreateView, DeleteView, UpdateView
 from django.urls import reverse_lazy
 from test_django.forms import PostAddForm, CommentForm, UserChangePassForm, CategoryAddForm
 from test_django.guard_login import login_required_message
@@ -12,16 +12,20 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from test_django.forms import ProfileForm
-from django.shortcuts import  redirect
-from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
-from django.utils import timezone
+from django.views.generic import DetailView
+from django.core.cache import cache
+from django.shortcuts import get_object_or_404, redirect
+from django.db.models import F
+import logging
 
 # Create your views here.
 
 # category = Category.objects.get(pk=4)
 # category.posts.all()
 # <QuerySet []>
+
+logger = logging.getLogger(__name__)
 
 
 class Home(ListView): # Тут краще робити через клас так як коротше
@@ -30,6 +34,18 @@ class Home(ListView): # Тут краще робити через клас та�
     context_object_name = "posts"
     template_name = "cooking/index.html"
     extra_context = {"title": "Головна сторінка"}
+
+    def get_queryset(self):
+        cache_key = 'home_posts'
+        posts = cache.get(cache_key)
+        if posts:
+            logger.info("Posts для Home отримано з кешу")
+        else:
+            logger.info("Posts для Home НЕ в кеші, звертаємось до БД")
+            posts = Post.objects.all().order_by('-create_at')
+            cache.set(cache_key, posts, 60 * 15)
+
+        return posts
 
 
 class AuthorPostsView(ListView):
@@ -93,45 +109,71 @@ class CategoryPost(Home):
         return context
 
 
+
 class PostDetail(DetailView):
     model = Post
     template_name = "cooking/articaldetail.html"
 
-    def get_queryset(self):
-        """Фільтрація"""
-        return Post.objects.filter(pk=self.kwargs["pk"])
-
     def get_context_data(self, **kwargs):
-        context = super().get_context_data()
-        Post.objects.filter(pk=self.kwargs["pk"]).update(watched=F("watched") + 1)
-        ext_post = Post.objects.all().exclude(pk=self.kwargs["pk"]).order_by("-watched")[:5]
-        post = Post.objects.get(pk=self.kwargs["pk"])
+        context = super().get_context_data(**kwargs)
+        pk = self.kwargs["pk"]
+
+        post_cache_key = f'post_detail_post_{pk}'
+        ext_post_cache_key = 'post_detail_ext_post'
+        comments_cache_key = f'post_detail_comments_{pk}'
+
+        post = cache.get(post_cache_key)
+        if post:
+            logger.info(f"Post (pk={pk}) отримано з кешу")
+        else:
+            logger.info(f"Post (pk={pk}) НЕ в кеші, звертаємось до БД")
+            post = Post.objects.get(pk=pk)
+            cache.set(post_cache_key, post, 60*15)
+
+        ext_post = cache.get(ext_post_cache_key)
+        if ext_post:
+            logger.info("ext_post отримано з кешу")
+        else:
+            logger.info("ext_post НЕ в кеші, звертаємось до БД")
+            ext_post = Post.objects.exclude(pk=pk).order_by("-watched")[:5]
+            cache.set(ext_post_cache_key, ext_post, 60*15)
+
+        comments = cache.get(comments_cache_key)
+        if comments:
+            logger.info(f"Comments для посту (pk={pk}) отримано з кешу")
+        else:
+            logger.info(f"Comments для посту (pk={pk}) НЕ в кеші, звертаємось до БД")
+            comments = Comment.objects.filter(post=post)
+            cache.set(comments_cache_key, comments, 60*15)
+
+        Post.objects.filter(pk=pk).update(watched=F("watched") + 1)
+
         context["title"] = post.title
         context["ext_post"] = ext_post
-        context["comments"] = Comment.objects.filter(post=post)
+        context["comments"] = comments
+
         if self.request.user.is_authenticated:
-            context["comment_form"] = CommentForm
+            context["comment_form"] = CommentForm()
 
         edit_comment_id = self.request.GET.get("edit")
-        if edit_comment_id:
-            try:
-                edit_comment_id = int(edit_comment_id)
-            except ValueError:
-                edit_comment_id = None
+        try:
+            edit_comment_id = int(edit_comment_id) if edit_comment_id else None
+        except ValueError:
+            edit_comment_id = None
         context["edit_comment_id"] = edit_comment_id
 
         reply_comment_id = self.request.GET.get("reply")
-        if reply_comment_id:
-            try:
-                reply_comment_id = int(reply_comment_id)
-            except ValueError:
-                reply_comment_id = None
+        try:
+            reply_comment_id = int(reply_comment_id) if reply_comment_id else None
+        except ValueError:
+            reply_comment_id = None
         context["reply_to_comment_id"] = reply_comment_id
 
         return context
 
     def post(self, request, *args, **kwargs):
         post = self.get_object()
+        pk = post.pk
 
         comment_id = request.POST.get("comment_id")
         if comment_id:
@@ -140,7 +182,11 @@ class PostDetail(DetailView):
             if new_text:
                 comment.text = new_text
                 comment.save()
-                return redirect("post_detail", pk=post.pk)
+
+                cache.delete(f'post_detail_comments_{pk}')
+                logger.info(f"Кеш коментарів для посту (pk={pk}) очищено після редагування коментаря")
+
+                return redirect("post_detail", pk=pk)
             else:
                 context = self.get_context_data()
                 context["edit_comment_id"] = comment.id
@@ -153,7 +199,11 @@ class PostDetail(DetailView):
             new_comment.post = post
             new_comment.user = request.user
             new_comment.save()
-            return redirect("post_detail", pk=post.pk)
+
+            cache.delete(f'post_detail_comments_{pk}')
+            logger.info(f"Кеш коментарів для посту (pk={pk}) очищено після додавання коментаря")
+
+            return redirect("post_detail", pk=pk)
 
         context = self.get_context_data()
         context["comment_form"] = form

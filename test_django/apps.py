@@ -7,3 +7,11 @@ class TestDjangoConfig(AppConfig):
 
     def ready(self):
         import test_django.signal
+
+
+class MyappConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'myapp'
+
+    def ready(self):
+        import test_django.signal

@@ -143,6 +143,34 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'myapp': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -232,13 +260,22 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'rogovo330@gmail.com'
 EMAIL_HOST_PASSWORD = 'rpzl yohl udnm vjag'
 
-#CACHE
 
-# CACHE
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-#         "LOCATION": os.path.join(BASE_DIR, "web_site_cache"),
-#     }
-# }
+
 FASTAPI_MOUNT_PATH = "/api"
+
+
+#CACHE
+CACHES = {
+  "default": {
+    "BACKEND": "django_redis.cache.RedisCache",
+    "LOCATION": "redis://127.0.0.1:6379/1",
+    "OPTIONS": {
+      "CLIENT_CLASS": "django_redis.client.DefaultClient",
+    },
+  }
+}
+
+
+
+
