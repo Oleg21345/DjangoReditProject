@@ -1,5 +1,5 @@
 from django.contrib import admin
-from test_django.models import Category, Post, Comment
+from test_django.models import Category, Post, Comment, Notificated, Profile
 from test_django.chat_models import ChatGroup, GroupMessage
 
 class PostAdmin(admin.ModelAdmin):
@@ -15,3 +15,5 @@ admin.site.register(Post, PostAdmin)
 admin.site.register(Comment)
 admin.site.register(ChatGroup)
 admin.site.register(GroupMessage)
+admin.site.register(Notificated)
+admin.site.register(Profile)
