@@ -7,7 +7,6 @@
 
 {% block main %}
 
-    <!-- Add post-->
     <div class="d-flex justify-content-center">
         <div class="card col-8 mb-4 mt-4">
             <div class="card-body">
@@ -20,7 +19,6 @@
                         {% endif %}
                 </h2>
                 <form action="" method="post" enctype="multipart/form-data">
-                    <!--  Fields for filling-->
                     {% csrf_token %}
                     {{ form.as_p }}
                     <button class="btn btn-dark" type="submit">

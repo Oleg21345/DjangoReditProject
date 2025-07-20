@@ -109,10 +109,16 @@ CHANNEL_LAYERS = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'dobryak',
+        'USER': 'dobryak',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
+
 
 MONGO_URI = "mongodb://localhost:27017"
 MONGO_DB = "chat_db"
@@ -235,3 +241,4 @@ EMAIL_HOST_PASSWORD = 'rpzl yohl udnm vjag'
 #         "LOCATION": os.path.join(BASE_DIR, "web_site_cache"),
 #     }
 # }
+FASTAPI_MOUNT_PATH = "/api"

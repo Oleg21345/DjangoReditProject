@@ -14,9 +14,12 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 from django.core.asgi import get_asgi_application
 from test_django import routing
+from fastapi.middleware.wsgi import WSGIMiddleware
+from api_django.config.config import app as fastapi_app
+import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-
+django.setup()
 
 django_asgi_app = get_asgi_application()
 
@@ -27,3 +30,15 @@ application = ProtocolTypeRouter({
         AuthMiddlewareStack(URLRouter(routing.websocket_urlpatterns))
     ),
 })
+
+
+application_fastapi = ProtocolTypeRouter({
+    "http": WSGIMiddleware(fastapi_app),  # FastAPI + Django
+    "websocket": AllowedHostsOriginValidator(
+        AuthMiddlewareStack(
+            URLRouter(routing.websocket_urlpatterns)
+        )
+    ),
+})
+
+
