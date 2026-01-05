@@ -1,71 +1,76 @@
 # DjangoRedditProject
 
-A production-oriented Reddit-like social media platform built with **Django**, **Django REST Framework**, **FastAPI**, **PostgreSQL**, **Redis**, and **Nginx**.
+A production-oriented **Reddit-like** social media platform built with **Django**, **Django REST Framework**, **FastAPI**, **PostgreSQL**, **Redis**, and **Nginx**.
 
-The project demonstrates scalable backend architecture, real-time features with WebSockets, complex relational data modeling, and a comparison between classic Django REST APIs and FastAPI-based services.
+This project demonstrates:
+- scalable backend architecture
+- real-time features with **WebSockets**
+- complex relational data modeling
+- comparison between **DRF** and **FastAPI** approaches
 
 ---
 
-## 🚀 Key Features
+## ✅ Key Features
 
 ### 🧑‍🤝‍🧑 Authentication & Authorization
 - User registration, login, logout
-- JWT-based authentication using **DRF SimpleJWT**
+- JWT authentication via **DRF SimpleJWT**
 - Permission-based access control
 
 ### 📝 Posts & Comments
-- Reddit-style posts with rich relationships
-- **Multi-level nested comments (up to 6 levels deep)**
+- Posts with rich relationships (FK, M2M)
+- Nested comments (up to **6 levels**, Reddit-style)
 - Optimized comment tree rendering
 
 ### ❤️ Social Interactions
 - Likes for posts and comments
-- User subscriptions and following system
-- Personalized content interactions
+- Subscriptions / following system
+- Personalized interactions
 
-### 🔔 Notifications System
-- Real-time notifications triggered by:
-  - Likes
-  - Comments
-  - New subscriptions
-- Delivered via WebSockets
+### 🔔 Notifications
+Real-time notifications triggered by:
+- likes
+- comments
+- new subscriptions  
+Delivered via **WebSockets**
 
 ### 💬 Real-time Chat
 - Private user-to-user chats
 - Built with **Django Channels + WebSockets**
-- Auto-scroll to the latest messages (JavaScript)
-- Redis-backed channel layer
+- Auto-scroll to latest message (JS)
+- Redis-backed channel layer (**channels-redis**)
 
 ---
 
 ## ⚡ Performance & Scalability
-- PostgreSQL with optimized queries and indexing
-- Redis used as a **low-level cache** (without django-redis)
+- PostgreSQL with indexing & query optimization
+- Redis used as a **low-level cache** (raw Redis, not django-redis)
 - Reduced DB load via caching and async handling
-- Production-ready settings and separation of concerns
+- Separation of concerns + production-oriented settings
 
 ---
 
 ## 📦 API Layer
-- **Django REST Framework**
-  - RESTful API with JWT auth
-  - Swagger / OpenAPI documentation
-- **FastAPI (experimental)**
-  - Separate implementation for benchmarking and performance comparison
-  - Demonstrates async-first API design
+
+### Django REST Framework
+- REST API with JWT auth
+- Swagger / OpenAPI docs
+
+### FastAPI (experimental)
+- Separate implementation for benchmarking
+- Demonstrates async-first API design
 
 ---
 
 ## 🛠 Admin Panel
-- Customized Django admin using **django-jazzmin**
-- Improved usability for moderators and admins
+- Customized admin UI with **django-jazzmin**
 
 ---
 
 ## 🎨 Frontend
-- Server-rendered Django templates
+- Django templates (SSR)
 - **HTMX** for dynamic UI updates
-- Vanilla JavaScript for client-side interactions
+- Vanilla JavaScript
 - Custom Django template tags
 
 ---
@@ -79,51 +84,35 @@ The project demonstrates scalable backend architecture, real-time features with 
 
 ---
 
-## 🛠 Tech Stack
+## 🧰 Tech Stack
 
-**Backend**
-- Django 5.2
-- Django REST Framework
-- FastAPI
-- Django Channels
+**Backend:** Django 5.2, DRF, FastAPI, Django Channels  
+**Database:** PostgreSQL (SQLAlchemy – experimental)  
+**Cache/Messaging:** Redis, channels-redis  
+**Auth:** JWT (SimpleJWT), Django auth  
+**Realtime:** WebSockets  
+**Frontend:** Django templates, HTMX, JavaScript  
+**Infra:** Nginx, Uvicorn, Daphne, Docker-ready  
+**Other:** drf-yasg, drf-spectacular, django-cors-headers, Pillow
 
-**Database**
-- PostgreSQL
-- SQLAlchemy (experimental)
+---
 
-**Cache / Messaging**
-- Redis
-- channels-redis
+## 🗂️ Project Structure (high-level)
+> Adjust names if yours differ.
 
-**Authentication**
-- JWT (SimpleJWT)
-- Django auth system
-
-**Realtime**
-- WebSockets
-
-**Frontend**
-- Django templates
-- HTMX
-- JavaScript
-
-**Infrastructure**
-- Nginx
-- Uvicorn
-- Daphne
-- Docker (ready)
-
-**Other**
-- drf-yasg
-- drf-spectacular
-- django-cors-headers
-- Pillow
+- `config/` – Django settings, urls, ASGI/WSGI
+- `apps/` – main Django apps (posts, comments, chat, notifications, users)
+- `templates/` – Django templates
+- `static/` – frontend assets (JS/CSS)
+- `fastapi_app/` – experimental FastAPI implementation
+- `nginx/` – nginx configs (if included)
+- `docker/` – docker configs (if included)
 
 ---
 
 ## ⚙️ Local Installation
 
-### 1️⃣ Clone repository
+### 1) Clone repository
 ```bash
 git clone https://github.com/Oleg21345/DjangoReditProject.git
 cd DjangoReditProject
